@@ -38,11 +38,19 @@ def do_run_migrations(connection: Connection) -> None:
         context.run_migrations()
 
 
+def _needs_ssl(url: str) -> bool:
+    lowered = url.lower()
+    return not any(h in lowered for h in ("@localhost", "@127.0.0.1"))
+
+
 async def run_migrations_online() -> None:
+    cfg_section = config.get_section(config.config_ini_section, {}) or {}
+    connect_args = {"ssl": True} if _needs_ssl(settings.database_url) else {}
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        cfg_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
