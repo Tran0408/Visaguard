@@ -10,12 +10,22 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def _force_asyncpg(cls, v: str) -> str:
+        v = (v or "").strip().strip("'\"")
+        # Tolerate users pasting `psql 'postgresql://...'`
+        if v.lower().startswith("psql "):
+            v = v[5:].strip().strip("'\"")
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://") and "+asyncpg" not in v:
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # asyncpg rejects libpq's sslmode param — drop it
-        v = v.replace("?sslmode=require", "").replace("&sslmode=require", "")
+        # asyncpg rejects libpq params — drop them
+        for junk in (
+            "?sslmode=require", "&sslmode=require",
+            "?channel_binding=require", "&channel_binding=require",
+        ):
+            v = v.replace(junk, "")
+        # clean dangling `?&` or trailing `?`
+        v = v.replace("?&", "?").rstrip("?&")
         return v
 
     openrouter_api_key: str
