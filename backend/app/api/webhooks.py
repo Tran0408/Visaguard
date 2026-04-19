@@ -4,7 +4,9 @@ import asyncio
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+import hmac
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,12 +26,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _verify_secret(x_postmark_secret: str | None) -> None:
+def _verify_path_secret(secret: str) -> None:
     expected = settings.postmark_inbound_secret
     if not expected:
         return
-    if x_postmark_secret != expected:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid secret")
+    if not hmac.compare_digest(secret, expected):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 
 async def _process_email_async(
@@ -81,13 +83,13 @@ async def _process_email_async(
         await db.commit()
 
 
-@router.post("/webhook/inbound-email")
+@router.post("/webhook/inbound-email/{secret}")
 async def inbound_email(
+    secret: str,
     request: Request,
     db: AsyncSession = Depends(get_db),
-    x_postmark_secret: str | None = Header(default=None, alias="X-Postmark-Secret"),
 ) -> dict:
-    _verify_secret(x_postmark_secret)
+    _verify_path_secret(secret)
 
     body = await request.json()
     payload = PostmarkInboundPayload(**body)
