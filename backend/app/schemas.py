@@ -106,8 +106,16 @@ class ShiftListItem(BaseModel):
     start_time: str
     end_time: str
     hours_worked: Decimal
+    break_minutes: int
+    break_overridden: bool
     source: str
     employer_name: str | None = None
+
+
+class ShiftUpdate(BaseModel):
+    start_time: str | None = None
+    end_time: str | None = None
+    break_minutes: int | None = Field(default=None, ge=0, le=480)
 
 
 class PostmarkInboundPayload(BaseModel):

@@ -160,10 +160,14 @@ async def extract_shifts_from_content(
         return []
     if not isinstance(data, list):
         return []
+    from app.services.shifts import clean_employer_name
+
     results: list[ShiftExtraction] = []
     for item in data:
         try:
-            results.append(ShiftExtraction(**item))
+            ext = ShiftExtraction(**item)
+            ext.employer = clean_employer_name(ext.employer)
+            results.append(ext)
         except Exception as exc:
             logger.warning("Bad shift item %s: %s", item, exc)
     return results

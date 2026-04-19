@@ -20,9 +20,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, nullable=False)
     unique_inbox: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     university: Mapped[str | None] = mapped_column(String, nullable=True)
-    roster_ics_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     calendar_sync_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    calendar_last_synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     semester_periods: Mapped[list["SemesterPeriod"]] = relationship(
@@ -32,6 +30,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     shifts: Mapped[list["Shift"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    calendar_feeds: Mapped[list["CalendarFeed"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -59,10 +60,34 @@ class Employer(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="employers")
     shifts: Mapped[list["Shift"]] = relationship(back_populates="employer")
+    break_rules: Mapped[list["EmployerBreakRule"]] = relationship(
+        back_populates="employer",
+        cascade="all, delete-orphan",
+        order_by="EmployerBreakRule.min_shift_hours",
+    )
+
+    @property
+    def resolved_name(self) -> str:
+        return self.display_name or self.name
+
+
+class EmployerBreakRule(Base):
+    __tablename__ = "employer_break_rules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    employer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("employers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    min_shift_hours: Mapped[Decimal] = mapped_column(Numeric(4, 2), nullable=False)
+    unpaid_break_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    employer: Mapped[Employer] = relationship(back_populates="break_rules")
 
 
 class Shift(Base):
@@ -79,6 +104,8 @@ class Shift(Base):
     start_time: Mapped[str] = mapped_column(String, nullable=False)
     end_time: Mapped[str] = mapped_column(String, nullable=False)
     hours_worked: Mapped[Decimal] = mapped_column(Numeric(4, 2), nullable=False)
+    break_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    break_overridden: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     source: Mapped[str] = mapped_column(String, nullable=False)
     external_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     raw_content: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -86,6 +113,21 @@ class Shift(Base):
 
     user: Mapped[User] = relationship(back_populates="shifts")
     employer: Mapped[Employer | None] = relationship(back_populates="shifts")
+
+
+class CalendarFeed(Base):
+    __tablename__ = "calendar_feeds"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    ics_url: Mapped[str] = mapped_column(Text, nullable=False)
+    employer_label: Mapped[str] = mapped_column(String(120), nullable=False)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped[User] = relationship(back_populates="calendar_feeds")
 
 
 class EmailLog(Base):

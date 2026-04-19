@@ -5,7 +5,16 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import calendar, fortnightly, semesters, shifts, users, webhooks
+from app.api import (
+    calendar,
+    email_logs,
+    employers,
+    fortnightly,
+    semesters,
+    shifts,
+    users,
+    webhooks,
+)
 from app.config import settings
 
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +35,8 @@ app.include_router(users.router)
 app.include_router(shifts.router)
 app.include_router(semesters.router)
 app.include_router(calendar.router)
+app.include_router(email_logs.router)
+app.include_router(employers.router)
 
 
 @app.get("/health")

@@ -79,7 +79,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
-      <div className="rounded-md border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-300">
+      <div className="glass rounded-2xl p-4 text-sm text-slate-300">
         Signed in as <span className="font-medium text-slate-100">{defaultEmail}</span>
       </div>
 
@@ -88,7 +88,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
         <select
           value={university}
           onChange={(e) => setUniversity(e.target.value)}
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 outline-none focus:border-emerald-500/50"
         >
           {UNIVERSITIES.map((u) => (
             <option key={u.value} value={u.value}>
@@ -105,14 +105,14 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
             <button
               type="button"
               onClick={() => addRow(true)}
-              className="rounded border border-slate-700 px-2 py-1 text-xs hover:border-slate-500"
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs hover:bg-white/10"
             >
               + Semester
             </button>
             <button
               type="button"
               onClick={() => addRow(false)}
-              className="rounded border border-slate-700 px-2 py-1 text-xs hover:border-slate-500"
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs hover:bg-white/10"
             >
               + Break
             </button>
@@ -126,7 +126,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
           {rows.map((r, i) => (
             <div
               key={i}
-              className="rounded-md border border-slate-800 bg-slate-900/40 p-3"
+              className="glass rounded-2xl p-3"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span
@@ -155,7 +155,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
                     type="date"
                     value={r.start_date}
                     onChange={(e) => updateRow(i, { start_date: e.target.value })}
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-emerald-500/50"
                     required
                   />
                 </div>
@@ -165,7 +165,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
                     type="date"
                     value={r.end_date}
                     onChange={(e) => updateRow(i, { end_date: e.target.value })}
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-emerald-500/50"
                     required
                   />
                 </div>
@@ -179,7 +179,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
                   value={r.label}
                   placeholder={r.is_semester ? "Sem 1 2026" : "Winter break"}
                   onChange={(e) => updateRow(i, { label: e.target.value })}
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-emerald-500/50"
                 />
               </div>
             </div>
@@ -196,9 +196,9 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-emerald-500 px-4 py-2 font-medium text-black hover:bg-emerald-400 disabled:opacity-50"
+        className="w-full rounded-xl bg-emerald-400 px-4 py-3 font-semibold text-black shadow-lg shadow-emerald-500/20 hover:bg-emerald-300 disabled:opacity-50"
       >
-        {pending ? "Saving..." : "Finish setup"}
+        {pending ? "Saving…" : "Finish setup"}
       </button>
     </form>
   );

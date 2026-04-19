@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -25,11 +25,14 @@ router = APIRouter(prefix="/api/fortnightly", tags=["fortnightly"])
 
 @router.get("/current", response_model=FortnightlySummary)
 async def current_fortnight(
+    offset: int = 0,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> FortnightlySummary:
     today = date.today()
-    period_start, period_end = get_fixed_fortnight_period(today)
+    base_start, _ = get_fixed_fortnight_period(today)
+    period_start = base_start + timedelta(days=offset * 14)
+    period_end = period_start + timedelta(days=13)
     rolling_start, rolling_end = get_rolling_period(today)
 
     earliest = min(period_start, rolling_start)
@@ -52,7 +55,12 @@ async def current_fortnight(
     rolling_hours = get_hours_in_period(shifts, rolling_start, rolling_end)
     limit = get_limit_for_period(periods, period_start)
     is_sem = is_semester_for_period(periods, period_start)
-    days_remaining = max((period_end - today).days + 1, 0)
+    if period_end < today:
+        days_remaining = 0
+    elif period_start > today:
+        days_remaining = 14
+    else:
+        days_remaining = max((period_end - today).days + 1, 0)
 
     hours_remaining = max(limit - hours_used, 0) if limit < UNLIMITED else 0.0
     percent = (hours_used / limit * 100) if limit < UNLIMITED else 0.0

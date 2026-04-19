@@ -48,25 +48,46 @@ export default function ManualShiftForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-md border border-dashed border-slate-700 px-4 py-3 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-300"
+        className="group glass flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-emerald-500/40 hover:text-emerald-300"
       >
-        + Add shift manually
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300 transition group-hover:bg-emerald-500/30">
+          +
+        </span>
+        Add shift manually
       </button>
     );
   }
 
+  const inputCls =
+    "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition focus:border-emerald-500/50 focus:bg-white/10";
+
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-3 rounded-md border border-slate-800 bg-slate-900/40 p-4"
+      className="glass space-y-3 rounded-2xl p-4 sm:p-5"
     >
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Add a shift</h3>
+        <button
+          type="button"
+          onClick={() => {
+            reset();
+            setOpen(false);
+          }}
+          className="rounded-lg p-1 text-slate-400 hover:bg-white/5 hover:text-slate-200"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
       <div>
         <label className="mb-1 block text-xs text-slate-400">Employer</label>
         <input
           type="text"
           value={form.employer_name}
           onChange={(e) => update("employer_name", e.target.value)}
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+          className={inputCls}
           placeholder="e.g. Woolworths"
           required
         />
@@ -77,7 +98,7 @@ export default function ManualShiftForm() {
           type="date"
           value={form.shift_date}
           onChange={(e) => update("shift_date", e.target.value)}
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+          className={inputCls}
           required
         />
       </div>
@@ -88,7 +109,7 @@ export default function ManualShiftForm() {
             type="time"
             value={form.start_time}
             onChange={(e) => update("start_time", e.target.value)}
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+            className={inputCls}
             required
           />
         </div>
@@ -98,35 +119,25 @@ export default function ManualShiftForm() {
             type="time"
             value={form.end_time}
             onChange={(e) => update("end_time", e.target.value)}
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm"
+            className={inputCls}
             required
           />
         </div>
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/10 p-2 text-xs text-red-300">
+        <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-2.5 text-xs text-red-300">
           {error}
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-1">
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-black hover:bg-emerald-400 disabled:opacity-50"
+          className="flex-1 rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-black shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-300 disabled:opacity-50"
         >
-          {pending ? "Saving..." : "Add shift"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            reset();
-            setOpen(false);
-          }}
-          className="rounded-md border border-slate-700 px-4 py-2 text-sm hover:border-slate-500"
-        >
-          Cancel
+          {pending ? "Saving…" : "Save shift"}
         </button>
       </div>
     </form>

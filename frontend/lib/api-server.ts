@@ -35,14 +35,66 @@ export type Shift = {
   start_time: string;
   end_time: string;
   hours_worked: string;
+  break_minutes: number;
+  break_overridden: boolean;
   source: "email" | "calendar" | "manual";
   employer_name: string | null;
 };
 
-export type CalendarStatus = {
-  connected: boolean;
-  ics_url_masked: string | null;
+export type ShiftUpdateInput = {
+  start_time?: string;
+  end_time?: string;
+  break_minutes?: number | null;
+};
+
+export type EmailLogItem = {
+  id: string;
+  received_at: string;
+  from_address: string | null;
+  subject: string | null;
+  status: string | null;
+  shifts_extracted: number;
+  error_message: string | null;
+};
+
+export type Employer = {
+  id: string;
+  name: string;
+  display_name: string | null;
+  resolved_name: string;
+  shift_count: number;
+};
+
+export type BreakRule = {
+  id: string;
+  min_shift_hours: string;
+  unpaid_break_minutes: number;
+};
+
+export type BreakRuleInput = {
+  min_shift_hours: number;
+  unpaid_break_minutes: number;
+};
+
+export type BreakRulesReplaceResult = {
+  rules: BreakRule[];
+  shifts_recomputed: number;
+};
+
+export type CalendarFeed = {
+  id: string;
+  ics_url_masked: string;
+  employer_label: string;
   last_synced_at: string | null;
+  created_at: string;
+};
+
+export type CalendarFeedCreateResult = {
+  saved: boolean;
+  feed: CalendarFeed;
+  scanned?: number;
+  inserted?: number;
+  sync_error?: string;
 };
 
 export type SemesterPeriodIn = {
@@ -86,7 +138,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  fortnightly: () => apiFetch<FortnightlySummary>("/api/fortnightly/current"),
+  fortnightly: (offset: number = 0) =>
+    apiFetch<FortnightlySummary>(`/api/fortnightly/current?offset=${offset}`),
   listShifts: () => apiFetch<Shift[]>("/api/shifts"),
   createShift: (body: {
     employer_name: string;
@@ -98,19 +151,54 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  updateShift: (id: string, body: ShiftUpdateInput) =>
+    apiFetch<Shift>(`/api/shifts/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   deleteShift: (id: string) =>
     apiFetch<void>(`/api/shifts/${id}`, { method: "DELETE" }),
-  calendarStatus: () =>
-    apiFetch<CalendarStatus>("/api/calendar/status"),
-  calendarSaveIcs: (url: string) =>
-    apiFetch<{ saved: boolean; scanned?: number; inserted?: number; sync_error?: string }>(
-      "/api/calendar/ics",
-      { method: "POST", body: JSON.stringify({ url }) },
-    ),
-  calendarSync: () =>
-    apiFetch<{ scanned: number; inserted: number }>("/api/calendar/sync", {
+  listCalendarFeeds: () =>
+    apiFetch<CalendarFeed[]>("/api/calendar/feeds"),
+  createCalendarFeed: (url: string, employer_label: string) =>
+    apiFetch<CalendarFeedCreateResult>("/api/calendar/feeds", {
       method: "POST",
+      body: JSON.stringify({ url, employer_label }),
     }),
-  calendarDisconnect: () =>
-    apiFetch<{ status: string }>("/api/calendar/ics", { method: "DELETE" }),
+  updateCalendarFeed: (id: string, employer_label: string) =>
+    apiFetch<CalendarFeed>(`/api/calendar/feeds/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ employer_label }),
+    }),
+  syncCalendarFeed: (id: string) =>
+    apiFetch<{ scanned: number; inserted: number }>(
+      `/api/calendar/feeds/${id}/sync`,
+      { method: "POST" },
+    ),
+  syncAllCalendarFeeds: () =>
+    apiFetch<{
+      scanned: number;
+      inserted: number;
+      feeds: number;
+      errors: { feed_id: string; error: string }[];
+    }>("/api/calendar/feeds/sync-all", { method: "POST" }),
+  deleteCalendarFeed: (id: string) =>
+    apiFetch<{ status: string }>(`/api/calendar/feeds/${id}`, {
+      method: "DELETE",
+    }),
+  recentEmailLogs: () =>
+    apiFetch<EmailLogItem[]>("/api/email-logs/recent"),
+  listEmployers: () => apiFetch<Employer[]>("/api/employers"),
+  renameEmployer: (id: string, display_name: string | null) =>
+    apiFetch<Employer>(`/api/employers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ display_name }),
+    }),
+  listBreakRules: (id: string) =>
+    apiFetch<BreakRule[]>(`/api/employers/${id}/break-rules`),
+  replaceBreakRules: (id: string, rules: BreakRuleInput[]) =>
+    apiFetch<BreakRulesReplaceResult>(`/api/employers/${id}/break-rules`, {
+      method: "PUT",
+      body: JSON.stringify({ rules }),
+    }),
 };
