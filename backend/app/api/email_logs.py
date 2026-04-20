@@ -14,6 +14,9 @@ from app.models import EmailLog, User
 
 router = APIRouter(prefix="/api/email-logs", tags=["email-logs"])
 
+IN_PROGRESS_STATUSES = {"received", "queued"}
+STALE_AFTER = timedelta(minutes=15)
+
 
 class EmailLogItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -32,11 +35,22 @@ async def recent_logs(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[EmailLogItem]:
-    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    cutoff = now - timedelta(hours=24)
     q = await db.execute(
         select(EmailLog)
         .where(EmailLog.user_id == user.id, EmailLog.received_at >= cutoff)
         .order_by(EmailLog.received_at.desc())
         .limit(20)
     )
-    return list(q.scalars().all())
+    logs = list(q.scalars().all())
+    stale_cutoff = now - STALE_AFTER
+    changed = False
+    for log in logs:
+        if (log.status or "") in IN_PROGRESS_STATUSES and log.received_at < stale_cutoff:
+            log.status = "error"
+            log.error_message = "Email processing timed out. Please forward it again."
+            changed = True
+    if changed:
+        await db.commit()
+    return logs
