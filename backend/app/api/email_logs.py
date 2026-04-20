@@ -32,7 +32,7 @@ async def recent_logs(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> list[EmailLogItem]:
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
     q = await db.execute(
         select(EmailLog)
         .where(EmailLog.user_id == user.id, EmailLog.received_at >= cutoff)
