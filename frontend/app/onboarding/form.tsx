@@ -78,9 +78,12 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="glass rounded-2xl p-4 text-sm text-slate-300">
-        Signed in as <span className="font-medium text-slate-100">{defaultEmail}</span>
+    <form onSubmit={onSubmit} className="space-y-5 sm:space-y-6">
+      <div className="glass rounded-2xl p-3 text-sm leading-6 text-slate-300 sm:p-4">
+        Signed in as{" "}
+        <span className="break-all font-medium text-slate-100">
+          {defaultEmail}
+        </span>
       </div>
 
       <div>
@@ -99,34 +102,34 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
       </div>
 
       <div>
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <label className="block text-sm font-medium">Semester periods</label>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <button
               type="button"
               onClick={() => addRow(true)}
-              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs hover:bg-white/10"
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-xs hover:bg-white/10 sm:py-1"
             >
               + Semester
             </button>
             <button
               type="button"
               onClick={() => addRow(false)}
-              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs hover:bg-white/10"
+              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-2 text-xs hover:bg-white/10 sm:py-1"
             >
               + Break
             </button>
           </div>
         </div>
-        <p className="mb-3 text-xs text-slate-400">
+        <p className="mb-3 text-xs leading-5 text-slate-400">
           48-hour fortnightly cap applies only when <em>semester</em> is on. Breaks = unlimited.
         </p>
 
-        <div className="space-y-3">
+        <div className="space-y-3 sm:space-y-4">
           {rows.map((r, i) => (
             <div
               key={i}
-              className="glass rounded-2xl p-3"
+              className="glass rounded-2xl p-3 sm:p-4"
             >
               <div className="mb-2 flex items-center justify-between">
                 <span
@@ -148,7 +151,7 @@ export default function OnboardingForm({ defaultEmail }: { defaultEmail: string 
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs text-slate-400">Start</label>
                   <input
